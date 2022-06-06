@@ -8,7 +8,24 @@ class UsersPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Users'),),
       body: Center(
-        child: Text('Users', style: Theme.of(context).textTheme.headline3,),
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.all(10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        width: 1, color: Colors.teal,
+                      )
+                    )
+                  ),
+                )
+            )
+          ],
+        ),
       ),
     );
   }
