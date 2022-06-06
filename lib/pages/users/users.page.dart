@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:git_hub_mobile_app/pages/repositories/home.page.dart';
 import 'package:http/http.dart' as http;
 
 class UsersPage extends StatefulWidget {
@@ -16,13 +17,25 @@ class _UsersPageState extends State<UsersPage> {
   TextEditingController queryTextEditingController = TextEditingController();
 
   dynamic data;
+  int currentPage=0;
+  int totalPages=0;
+  int pageSize=20;
+  List<dynamic> items=[];
+  ScrollController scrollController= ScrollController();
 
   void _search(String? query) {
-    String url="https://api.github.com/search/users?q=${query}&per_page=20&page=0";
+    String url="https://api.github.com/search/users?q=$query&per_page=$pageSize&page=$currentPage";
     http.get(Uri.parse(url))
         .then((response) {
           setState((){
-            this.data=json.decode(response.body);
+            data=json.decode(response.body);
+            items.addAll(data['items']);
+            if(data['total_count'] % pageSize ==0){
+              totalPages=data['total_count']~/pageSize;
+            }else{
+              totalPages=(data['total_count']/pageSize).floor() +1;
+            }
+
           });
           //JsonEncoder jsonEncoder= JsonEncoder.withIndent("   ");
           //print(jsonEncoder.convert(this.data));
@@ -32,11 +45,26 @@ class _UsersPageState extends State<UsersPage> {
     });
   }
   @override
+  void initState(){
+    //TODO: implement initState
+    super.initState();
+    scrollController.addListener(() {
+      if(scrollController.position.pixels==scrollController.position.maxScrollExtent){
+        setState((){
+          if(currentPage<totalPages-1){
+            ++currentPage;
+            _search(query);
+          }
+        });
+      }
+    });
+  }
+  @override
   Widget build(BuildContext context) {
     print("Building page ...");
     return Scaffold(
       appBar: AppBar(
-        title: Text('Users => ${query}'),
+        title: Text('Users => $query => $currentPage / $totalPages'),
       ),
       body: Center(
         child: Column(
@@ -76,7 +104,9 @@ class _UsersPageState extends State<UsersPage> {
                 IconButton(
                     onPressed: () {
                       setState((){
-                        this.query = queryTextEditingController.text;
+                        items = [];
+                        currentPage =0;
+                        query = queryTextEditingController.text;
                         _search(query);
                       });
                     },
@@ -90,25 +120,30 @@ class _UsersPageState extends State<UsersPage> {
               ],
             ),
             Expanded(
-              child: ListView.builder(
-                  itemCount: (data==null)?0:data['items'].length,
+              child: ListView.separated(
+                separatorBuilder: (context, index) => Divider(height: 2,color: Colors.teal,),
+                controller: scrollController,
+                  itemCount: items.length,
                   itemBuilder: (context,index){
                     return ListTile(
+                      onTap: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>GitRepositoriesPage(login: items[index]['login'],)));
+                      },
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundImage: NetworkImage(data['items'][index]['avatar_url']),
+                                backgroundImage: NetworkImage(items[index]['avatar_url']),
                                 radius: 30,
                               ),
                               const SizedBox(width: 20),
-                              Text("${data['items'][index]['login']}"),
+                              Text("${items[index]['login']}"),
                             ],
                           ),
                           CircleAvatar(
-                            child: Text("${data['items'][index]['score']}"),
+                            child: Text("${items[index]['score']}"),
                           )
                         ],
                       )
