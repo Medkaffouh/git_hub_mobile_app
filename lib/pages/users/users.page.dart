@@ -127,7 +127,7 @@ class _UsersPageState extends State<UsersPage> {
                   itemBuilder: (context,index){
                     return ListTile(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>GitRepositoriesPage(login: items[index]['login'],)));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>GitRepositoriesPage(login: items[index]['login'],avatarUrl: items[index]['avatar_url'],)));
                       },
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
